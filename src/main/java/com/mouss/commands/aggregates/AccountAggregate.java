@@ -1,0 +1,105 @@
+package com.mouss.commands.aggregates;
+
+import lombok.extern.slf4j.Slf4j;
+import com.mouss.commands.commands.AddAccountCommand;
+import com.mouss.commands.commands.CreditAccountCommand;
+import com.mouss.commands.commands.DebitAccountCommand;
+import com.mouss.commands.commands.UpdateAccountStatusCommand;
+import com.mouss.enums.AccountStatus;
+import com.mouss.events.*;
+import org.axonframework.commandhandling.CommandHandler;
+import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.modelling.command.AggregateIdentifier;
+import org.axonframework.modelling.command.AggregateLifecycle;
+import org.axonframework.spring.stereotype.Aggregate;
+
+@Aggregate
+@Slf4j
+public class AccountAggregate {
+    @AggregateIdentifier
+  private String accountId;
+  private double balance;
+  private AccountStatus status;
+    //Pour Axon
+  public AccountAggregate(){}
+  @CommandHandler
+  public AccountAggregate(AddAccountCommand command){
+      log.info("############## AddAccuntCommand Received : #########");
+      if(command.getInitialBalance()<=0) throw new IllegalArgumentException("Balance doit etre positive");
+      AggregateLifecycle.apply(new AccountCreatedEvent(
+              command.getId(),
+              command.getInitialBalance(),
+              AccountStatus.CREATED,
+              command.getCurrency()
+      ));
+      AggregateLifecycle.apply(new AccountActivatedEvent(
+              command.getId(),
+              AccountStatus.ACTIVATED
+      ));
+  }
+  @EventSourcingHandler
+  public void on(AccountCreatedEvent event){
+      log.info("############## AccountCreatedEvent occured : #########");
+      this.accountId = event.getAccountId();
+      this.balance=event.getInitialBalance();
+      this.status=event.getStatus();
+  }
+    @EventSourcingHandler
+    public void on(AccountActivatedEvent event){
+        log.info("############## AccountActivatedEvent occured : #########");
+        this.accountId = event.getAccountId();
+        this.status=event.getStatus();
+    }
+  @CommandHandler
+  public void handle(CreditAccountCommand command){
+        log.info("############## CreditAccuntCommand Received : #########");
+        if(!status.equals(AccountStatus.ACTIVATED)) throw new RuntimeException("The account"+command.getId()+" Is not activated");
+        if(command.getAmount()<=0) throw new IllegalArgumentException("Amount doit etre positive");
+        AggregateLifecycle.apply(new AccountCreditedEvent(
+                command.getId(),
+                command.getAmount(),
+                command.getCurrency()
+        ));
+  }
+    @EventSourcingHandler
+    public void on(AccountCreditedEvent event){
+        log.info("############## AccountCreditedEvent occured : #########");
+        this.accountId = event.getAccountId();
+        this.balance=this.balance+event.getAmount();
+    }
+
+    @CommandHandler
+    public void handle(DebitAccountCommand command){
+        log.info("############## DebitAccuntCommand Received : #########");
+        if(!status.equals(AccountStatus.ACTIVATED)) throw new RuntimeException("The account"+command.getId()+" Is not activated");
+        if(command.getAmount()<=0) throw new IllegalArgumentException("Amount doit etre positive");
+        if(balance<command.getAmount()) throw new IllegalArgumentException("Balance non suffisant");
+        AggregateLifecycle.apply(new AccountDebitedEvent(
+                command.getId(),
+                command.getAmount(),
+                command.getCurrency()
+        ));
+    }
+    @EventSourcingHandler
+    public void on(AccountDebitedEvent event){
+        log.info("############## AccountDebitedEvent occured : #########");
+        this.accountId = event.getAccountId();
+        this.balance=this.balance - event.getAmount();
+    }
+    @CommandHandler
+    public void handle(UpdateAccountStatusCommand command){
+        log.info("############## UpdateAccountStatusCommand Received : #########");
+        if(command.getStatus()==status) throw new RuntimeException("This account"+command.getId()+" Is already "+command.getStatus());
+        AggregateLifecycle.apply(new AccountStatusUpdatedEvent(
+                command.getId(),
+                command.getStatus()
+        ));
+    }
+    @EventSourcingHandler
+    public void on(AccountStatusUpdatedEvent event){
+        log.info("############## AccountStatusUpdatedEvent occured : #########");
+        this.accountId = event.getAccountId();
+        this.status=event.getStatus();
+    }
+
+}

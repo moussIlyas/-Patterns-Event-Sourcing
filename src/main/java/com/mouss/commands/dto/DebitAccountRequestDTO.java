@@ -1,0 +1,5 @@
+package com.mouss.commands.dto;
+
+
+public record DebitAccountRequestDTO(String accountId, double amount , String currency) {
+}
