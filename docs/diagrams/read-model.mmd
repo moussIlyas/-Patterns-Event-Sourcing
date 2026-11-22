@@ -1,0 +1,19 @@
+erDiagram
+    ACCOUNT ||--o{ ACCOUNT_OPERATION : "has operations"
+
+    ACCOUNT {
+        string id PK "Aggregate UUID"
+        double balance "Current projected balance"
+        datetime created_at "Event timestamp"
+        string status "CREATED, ACTIVATED, SUSPENDED or BLOCKED"
+        string currency "Account currency"
+    }
+
+    ACCOUNT_OPERATION {
+        long id PK "Generated identity"
+        datetime date "Event timestamp"
+        double amount "Credit or debit amount"
+        string type "CREDIT or DEBIT"
+        string currency "Operation currency"
+        string account_id FK "Owning account"
+    }

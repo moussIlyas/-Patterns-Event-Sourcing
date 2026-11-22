@@ -1,0 +1,24 @@
+stateDiagram-v2
+    [*] --> CREATED : AccountCreatedEvent<br/>initialBalance > 0
+    CREATED --> ACTIVATED : AccountActivatedEvent<br/>emitted immediately after creation
+
+    ACTIVATED --> ACTIVATED : AccountCreditedEvent<br/>balance = balance + amount
+    ACTIVATED --> ACTIVATED : AccountDebitedEvent<br/>amount > 0 and balance >= amount
+
+    ACTIVATED --> SUSPENDED : UpdateAccountStatusCommand
+    ACTIVATED --> BLOCKED : UpdateAccountStatusCommand
+    SUSPENDED --> ACTIVATED : UpdateAccountStatusCommand
+    SUSPENDED --> BLOCKED : UpdateAccountStatusCommand
+    BLOCKED --> ACTIVATED : UpdateAccountStatusCommand
+    BLOCKED --> SUSPENDED : UpdateAccountStatusCommand
+
+    note right of ACTIVATED
+        Credit and debit commands require
+        an ACTIVATED aggregate.
+    end note
+
+    note right of CREATED
+        The controller generates the UUID.
+        The aggregate is reconstructed from
+        events before every later command.
+    end note

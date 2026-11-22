@@ -1,0 +1,40 @@
+flowchart LR
+    Client["API client<br/>Swagger UI / IntelliJ HTTP Client"]
+
+    subgraph App["mouss.com - Spring Boot application"]
+        subgraph CommandSide["Command side - CQRS write model"]
+            CC["AccountCommandController<br/>/commands/accounts"]
+            CG["Axon CommandGateway"]
+            AGG["AccountAggregate<br/>business invariants"]
+            CC --> CG --> AGG
+        end
+
+        subgraph QuerySide["Query side - CQRS read model"]
+            QC["AccountQueryController<br/>/query/accounts"]
+            QG["Axon QueryGateway"]
+            QH["AccountQueryHandler"]
+            AR["AccountRepository"]
+            OR["OperationRepository"]
+            QC --> QG --> QH
+            QH --> AR
+            QH --> OR
+        end
+
+        EH["AccountEventHandler<br/>read-model projector"]
+        QE["QueryUpdateEmitter<br/>SSE updates"]
+    end
+
+    AX[("Axon Server<br/>event store + message routing<br/>ports 8024 / 8124")]
+    DB[("PostgreSQL<br/>read model<br/>port 5432")]
+
+    Client -->|"POST / PUT commands"| CC
+    Client -->|"GET queries"| QC
+    AGG -->|"domain events"| AX
+    CC -->|"GET /events/{accountId}"| AX
+    AX -->|"event publication"| EH
+    EH --> AR
+    EH --> OR
+    AR --> DB
+    OR --> DB
+    EH -->|"operation update"| QE
+    QE -->|"GET /watch/{accountId}<br/>text/event-stream"| QC

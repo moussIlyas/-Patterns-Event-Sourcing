@@ -1,0 +1,90 @@
+classDiagram
+    direction LR
+
+    class AccountQueryController {
+        +getAllAccounts() CompletableFuture~List~
+        +getAccountStatement(String accountId) CompletableFuture~AccountStatementReponseDTO~
+        +watch(String accountId) Flux~AccountOperation~
+    }
+    class AccountQueryHandler {
+        +on(GetAllAccountsQuery) List~Account~
+        +on(GetAccountStatementQuery) AccountStatementReponseDTO
+        +on(WatchEventQuery) AccountOperation
+    }
+    class AccountEventHandler {
+        +on(AccountCreatedEvent, EventMessage) void
+        +on(AccountActivatedEvent) void
+        +on(AccountCreditedEvent, EventMessage) void
+        +on(AccountDebitedEvent, EventMessage) void
+        +on(AccountStatusUpdatedEvent) void
+    }
+
+    class Account {
+        <<entity>>
+        -String id
+        -double balance
+        -Instant createdAt
+        -AccountStatus status
+        -String currency
+    }
+    class AccountOperation {
+        <<entity>>
+        -Long id
+        -Instant date
+        -double amount
+        -OperationType type
+        -String currency
+        -Account account
+    }
+    class AccountStatementReponseDTO {
+        -Account account
+        -List~AccountOperation~ operations
+    }
+    class AccountRepository {
+        <<interface>>
+        +findAll() List~Account~
+        +findById(String id) Optional~Account~
+        +save(Account account) Account
+    }
+    class OperationRepository {
+        <<interface>>
+        +findByAccountId(String accountId) List~AccountOperation~
+        +save(AccountOperation operation) AccountOperation
+    }
+    class GetAllAccountsQuery
+    class GetAccountStatementQuery {
+        -String accountId
+    }
+    class WatchEventQuery {
+        -String accountId
+    }
+    class AccountStatus {
+        <<enumeration>>
+        CREATED
+        ACTIVATED
+        SUSPENDED
+        BLOCKED
+    }
+    class OperationType {
+        <<enumeration>>
+        CREDIT
+        DEBIT
+    }
+
+    AccountQueryController ..> AccountQueryHandler : via QueryGateway
+    AccountQueryController ..> GetAllAccountsQuery
+    AccountQueryController ..> GetAccountStatementQuery
+    AccountQueryController ..> WatchEventQuery
+    AccountQueryHandler ..> GetAllAccountsQuery : handles
+    AccountQueryHandler ..> GetAccountStatementQuery : handles
+    AccountQueryHandler ..> WatchEventQuery : handles
+    AccountQueryHandler --> AccountRepository
+    AccountQueryHandler --> OperationRepository
+    AccountEventHandler --> AccountRepository
+    AccountEventHandler --> OperationRepository
+    AccountQueryHandler ..> AccountStatementReponseDTO : builds
+    AccountStatementReponseDTO --> Account
+    AccountStatementReponseDTO --> AccountOperation
+    Account "1" -- "0..*" AccountOperation : operations
+    Account --> AccountStatus
+    AccountOperation --> OperationType

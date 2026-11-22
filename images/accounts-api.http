@@ -1,0 +1,115 @@
+### mouss.com - Event Sourcing / CQRS API
+### Run with IntelliJ IDEA HTTP Client or VS Code REST Client.
+### Start dependencies with: docker compose up -d axonserver postgres
+### Start the application with: ./mvnw spring-boot:run
+
+@baseUrl = http://localhost:8066
+@currency = MAD
+
+### 1. Create an account (run this request first)
+# @name createAccount
+POST {{baseUrl}}/commands/accounts/add
+Content-Type: application/json
+
+{
+  "initialBalance": 1000.0,
+  "currency": "{{currency}}"
+}
+
+> {%
+    client.global.set("accountId", response.body);
+    client.test("Account created", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+        client.assert(response.body && response.body.length > 0, "Expected an account UUID");
+    });
+%}
+
+### 2. List all accounts
+GET {{baseUrl}}/query/accounts/all
+Accept: application/json
+
+### 3. Credit the created account by 250 MAD
+# @name creditAccount
+POST {{baseUrl}}/commands/accounts/credit
+Content-Type: application/json
+
+{
+  "accountId": "{{accountId}}",
+  "amount": 250.0,
+  "currency": "{{currency}}"
+}
+
+> {%
+    client.test("Account credited", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+    });
+%}
+
+### 4. Debit the created account by 100 MAD
+# @name debitAccount
+POST {{baseUrl}}/commands/accounts/debit
+Content-Type: application/json
+
+{
+  "accountId": "{{accountId}}",
+  "amount": 100.0,
+  "currency": "{{currency}}"
+}
+
+> {%
+    client.test("Account debited", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+    });
+%}
+
+### 5. Get the account statement (expected balance: 1150.0)
+GET {{baseUrl}}/query/accounts/accountsStatement/{{accountId}}
+Accept: application/json
+
+### 6. Read the aggregate event history from Axon Server
+GET {{baseUrl}}/commands/accounts/events/{{accountId}}
+Accept: application/json
+
+### 7. Suspend the account
+# @name suspendAccount
+PUT {{baseUrl}}/commands/accounts/updateStatus
+Content-Type: application/json
+
+{
+  "accountId": "{{accountId}}",
+  "status": "SUSPENDED"
+}
+
+> {%
+    client.test("Account status updated", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+    });
+%}
+
+### 8. Verify the projected status after suspension
+GET {{baseUrl}}/query/accounts/accountsStatement/{{accountId}}
+Accept: application/json
+
+### 9. Reactivate the account before further credit/debit operations
+PUT {{baseUrl}}/commands/accounts/updateStatus
+Content-Type: application/json
+
+{
+  "accountId": "{{accountId}}",
+  "status": "ACTIVATED"
+}
+
+### 10. Optional negative test: reject an overdraft
+POST {{baseUrl}}/commands/accounts/debit
+Content-Type: application/json
+
+{
+  "accountId": "{{accountId}}",
+  "amount": 999999.0,
+  "currency": "{{currency}}"
+}
+
+### 11. Real-time SSE stream (run separately and keep it open)
+### Then execute request 3 or 4 for the same account in another tab.
+GET {{baseUrl}}/query/accounts/watch/{{accountId}}
+Accept: text/event-stream

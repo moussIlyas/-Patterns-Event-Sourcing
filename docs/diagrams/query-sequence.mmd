@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    actor Client
+    participant Controller as AccountQueryController
+    participant Gateway as QueryGateway
+    participant Handler as AccountQueryHandler
+    participant Repo as JPA repositories
+    participant DB as PostgreSQL
+    participant Emitter as QueryUpdateEmitter
+
+    par Account list
+        Client->>Controller: GET /query/accounts/all
+        Controller->>Gateway: GetAllAccountsQuery
+        Gateway->>Handler: Dispatch query
+        Handler->>Repo: accountRepository.findAll()
+        Repo->>DB: SELECT accounts
+        DB-->>Repo: Account rows
+        Repo-->>Handler: List<Account>
+        Handler-->>Controller: List<Account>
+        Controller-->>Client: JSON account list
+    and Account statement
+        Client->>Controller: GET /query/accounts/accountsStatement/{accountId}
+        Controller->>Gateway: GetAccountStatementQuery
+        Gateway->>Handler: Dispatch query
+        Handler->>Repo: findById(accountId)
+        Handler->>Repo: findByAccountId(accountId)
+        Repo->>DB: SELECT account + operations
+        Handler-->>Controller: AccountStatementReponseDTO
+        Controller-->>Client: Account and operation history
+    end
+
+    Note over Client,Emitter: Real-time operation streaming uses a subscription query and SSE.
+
+    Client->>Controller: GET /query/accounts/watch/{accountId}
+    Controller->>Gateway: subscriptionQuery(WatchEventQuery)
+    Gateway->>Handler: Initial WatchEventQuery
+    Handler-->>Controller: Empty initial AccountOperation (filtered out)
+    Controller-->>Client: text/event-stream connection remains open
+    Emitter-->>Gateway: AccountCreditedEvent or AccountDebitedEvent projection
+    Gateway-->>Controller: Subscription update: AccountOperation
+    Controller-->>Client: data: AccountOperation JSON

@@ -1,0 +1,33 @@
+sequenceDiagram
+    autonumber
+    actor Client
+    participant Controller as AccountCommandController
+    participant Gateway as CommandGateway
+    participant Aggregate as AccountAggregate
+    participant Store as Axon Server EventStore
+    participant Projector as AccountEventHandler
+    participant DB as PostgreSQL read model
+
+    Client->>Controller: POST /commands/accounts/add<br/>{initialBalance, currency}
+    Controller->>Controller: Generate UUID accountId
+    Controller->>Gateway: AddAccountCommand
+    Gateway->>Aggregate: Route by @TargetAggregateIdentifier
+    Aggregate->>Aggregate: Validate initialBalance > 0
+    Aggregate->>Store: AccountCreatedEvent + AccountActivatedEvent
+    Store-->>Gateway: Command accepted
+    Gateway-->>Controller: CompletableFuture<String>
+    Controller-->>Client: accountId
+    Store->>Projector: Publish account events
+    Projector->>DB: Insert Account with CREATED status
+    Projector->>DB: Update Account to ACTIVATED
+
+    Note over Client,DB: Credit, debit and status updates follow the same CQRS path.
+
+    Client->>Controller: POST /credit or /debit, PUT /updateStatus
+    Controller->>Gateway: CreditAccountCommand / DebitAccountCommand /<br/>UpdateAccountStatusCommand
+    Gateway->>Aggregate: Load aggregate from its event history
+    Aggregate->>Aggregate: Check activated status, positive amount<br/>and sufficient balance for debit
+    Aggregate->>Store: AccountCreditedEvent / AccountDebitedEvent /<br/>AccountStatusUpdatedEvent
+    Store->>Projector: Publish new event
+    Projector->>DB: Update balance/status and save operation when applicable
+    Controller-->>Client: Command result

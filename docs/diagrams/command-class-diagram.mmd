@@ -1,0 +1,125 @@
+classDiagram
+    direction LR
+
+    class AccountCommandController {
+        +addNewAccount(AddNewAccountRequestDTO) CompletableFuture~String~
+        +creditAccount(CreditAccountRequestDTO) CompletableFuture~String~
+        +debitAccount(DebitAccountRequestDTO) CompletableFuture~String~
+        +updateStatus(UpdateAccountStatusRequestDTO) CompletableFuture~String~
+        +eventStore(String accountId) Stream
+    }
+
+    class AccountAggregate {
+        -String accountId
+        -double balance
+        -AccountStatus status
+        +handle(CreditAccountCommand) void
+        +handle(DebitAccountCommand) void
+        +handle(UpdateAccountStatusCommand) void
+        +on(AccountCreatedEvent) void
+        +on(AccountActivatedEvent) void
+        +on(AccountCreditedEvent) void
+        +on(AccountDebitedEvent) void
+        +on(AccountStatusUpdatedEvent) void
+    }
+
+    class AddAccountCommand {
+        -String id
+        -double initialBalance
+        -String currency
+    }
+    class CreditAccountCommand {
+        -String id
+        -double amount
+        -String currency
+    }
+    class DebitAccountCommand {
+        -String id
+        -double amount
+        -String currency
+    }
+    class UpdateAccountStatusCommand {
+        -String id
+        -AccountStatus status
+    }
+
+    class AccountCreatedEvent {
+        -String accountId
+        -double initialBalance
+        -AccountStatus status
+        -String currency
+    }
+    class AccountActivatedEvent {
+        -String accountId
+        -AccountStatus status
+    }
+    class AccountCreditedEvent {
+        -String accountId
+        -double amount
+        -String currency
+    }
+    class AccountDebitedEvent {
+        -String accountId
+        -double amount
+        -String currency
+    }
+    class AccountStatusUpdatedEvent {
+        -String accountId
+        -AccountStatus status
+    }
+
+    class AccountStatus {
+        <<enumeration>>
+        CREATED
+        ACTIVATED
+        SUSPENDED
+        BLOCKED
+    }
+
+    class AddNewAccountRequestDTO {
+        <<record>>
+        double initialBalance
+        String currency
+    }
+    class CreditAccountRequestDTO {
+        <<record>>
+        String accountId
+        double amount
+        String currency
+    }
+    class DebitAccountRequestDTO {
+        <<record>>
+        String accountId
+        double amount
+        String currency
+    }
+    class UpdateAccountStatusRequestDTO {
+        <<record>>
+        String accountId
+        AccountStatus status
+    }
+
+    AccountCommandController ..> AddAccountCommand : sends
+    AccountCommandController ..> CreditAccountCommand : sends
+    AccountCommandController ..> DebitAccountCommand : sends
+    AccountCommandController ..> UpdateAccountStatusCommand : sends
+    AccountCommandController ..> AddNewAccountRequestDTO
+    AccountCommandController ..> CreditAccountRequestDTO
+    AccountCommandController ..> DebitAccountRequestDTO
+    AccountCommandController ..> UpdateAccountStatusRequestDTO
+
+    AccountAggregate ..> AddAccountCommand : handles
+    AccountAggregate ..> CreditAccountCommand : handles
+    AccountAggregate ..> DebitAccountCommand : handles
+    AccountAggregate ..> UpdateAccountStatusCommand : handles
+    AccountAggregate ..> AccountCreatedEvent : applies
+    AccountAggregate ..> AccountActivatedEvent : applies
+    AccountAggregate ..> AccountCreditedEvent : applies
+    AccountAggregate ..> AccountDebitedEvent : applies
+    AccountAggregate ..> AccountStatusUpdatedEvent : applies
+    AccountAggregate --> AccountStatus
+    AccountCreatedEvent --> AccountStatus
+    AccountActivatedEvent --> AccountStatus
+    AccountStatusUpdatedEvent --> AccountStatus
+    UpdateAccountStatusCommand --> AccountStatus
+    UpdateAccountStatusRequestDTO --> AccountStatus

@@ -1,0 +1,69 @@
+{
+  "accountId": "fd2314b6-d3b4-454e-8b5e-c3f05998d55d",
+  "executedAt": "2026-11-22T12:49:14.808Z",
+  "results": [
+    {
+      "description": "Create account with 1000 MAD",
+      "method": "post",
+      "path": "/commands/accounts/add",
+      "status": "200",
+      "responseBody": "fd2314b6-d3b4-454e-8b5e-c3f05998d55d"
+    },
+    {
+      "description": "List all accounts after creation",
+      "method": "get",
+      "path": "/query/accounts/all",
+      "status": "200",
+      "responseBody": "[\n  {\n    \"id\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n    \"balance\": 1000,\n    \"createdAt\": \"2026-11-22T12:49:03.067Z\",\n    \"status\": \"ACTIVATED\",\n    \"currency\": null\n  }\n]"
+    },
+    {
+      "description": "Credit account by 250 MAD",
+      "method": "post",
+      "path": "/commands/accounts/credit",
+      "status": "200",
+      "responseBody": "connection: keep-alive \n content-length: 0 \n date: Sun,22 Nov 2026 12:49:06 GMT \n keep-alive: timeout=60"
+    },
+    {
+      "description": "Debit account by 100 MAD",
+      "method": "post",
+      "path": "/commands/accounts/debit",
+      "status": "200",
+      "responseBody": "connection: keep-alive \n content-length: 0 \n date: Sun,22 Nov 2026 12:49:07 GMT \n keep-alive: timeout=60"
+    },
+    {
+      "description": "Account statement with balance 1150 MAD and two operations",
+      "method": "get",
+      "path": "/query/accounts/accountsStatement/{accountId}",
+      "status": "200",
+      "responseBody": "{\n  \"account\": {\n    \"id\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n    \"balance\": 1150,\n    \"createdAt\": \"2026-11-22T12:49:03.067Z\",\n    \"status\": \"ACTIVATED\",\n    \"currency\": null\n  },\n  \"operations\": [\n    {\n      \"id\": 1,\n      \"date\": \"2026-11-22T12:49:06.087Z\",\n      \"amount\": 250,\n      \"type\": \"CREDIT\",\n      \"currency\": \"MAD\",\n      \"account\": {\n        \"id\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n        \"balance\": 1150,\n        \"createdAt\": \"2026-11-22T12:49:03.067Z\",\n        \"status\": \"ACTIVATED\",\n        \"currency\": null\n      }\n    },\n    {\n      \"id\": 2,\n      \"date\": \"2026-11-22T12:49:07.478Z\",\n      \"amount\": 100,\n      \"type\": \"DEBIT\",\n      \"currency\": \"MAD\",\n      \"account\": {\n        \"id\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n        \"balance\": 1150,\n        \"createdAt\": \"2026-11-22T12:49:03.067Z\",\n        \"status\": \"ACTIVATED\",\n        \"currency\": null\n      }\n    }\n  ]\n}"
+    },
+    {
+      "description": "Suspend the account",
+      "method": "put",
+      "path": "/commands/accounts/updateStatus",
+      "status": "200",
+      "responseBody": "connection: keep-alive \n content-length: 0 \n date: Sun,22 Nov 2026 12:49:10 GMT \n keep-alive: timeout=60"
+    },
+    {
+      "description": "Account statement after suspension",
+      "method": "get",
+      "path": "/query/accounts/accountsStatement/{accountId}",
+      "status": "200",
+      "responseBody": "{\n  \"account\": {\n    \"id\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n    \"balance\": 1150,\n    \"createdAt\": \"2026-11-22T12:49:03.067Z\",\n    \"status\": \"SUSPENDED\",\n    \"currency\": null\n  },\n  \"operations\": [\n    {\n      \"id\": 1,\n      \"date\": \"2026-11-22T12:49:06.087Z\",\n      \"amount\": 250,\n      \"type\": \"CREDIT\",\n      \"currency\": \"MAD\",\n      \"account\": {\n        \"id\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n        \"balance\": 1150,\n        \"createdAt\": \"2026-11-22T12:49:03.067Z\",\n        \"status\": \"SUSPENDED\",\n        \"currency\": null\n      }\n    },\n    {\n      \"id\": 2,\n      \"date\": \"2026-11-22T12:49:07.478Z\",\n      \"amount\": 100,\n      \"type\": \"DEBIT\",\n      \"currency\": \"MAD\",\n      \"account\": {\n        \"id\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n        \"balance\": 1150,\n        \"createdAt\": \"2026-11-22T12:49:03.067Z\",\n        \"status\": \"SUSPENDED\",\n        \"currency\": null\n      }\n    }\n  ]\n}"
+    },
+    {
+      "description": "Event sourcing history from Axon Server",
+      "method": "get",
+      "path": "/commands/accounts/events/{accountId}",
+      "status": "200",
+      "responseBody": "[\n  {\n    \"type\": \"AccountAggregate\",\n    \"aggregateIdentifier\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n    \"sequenceNumber\": 0,\n    \"timestamp\": \"2026-11-22T12:49:03.067Z\",\n    \"identifier\": \"4cb65cbe-3a40-4a1a-a410-9a2f7448a0f5\",\n    \"payload\": {\n      \"accountId\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n      \"initialBalance\": 1000,\n      \"status\": \"CREATED\",\n      \"currency\": \"MAD\"\n    },\n    \"metaData\": {\n      \"traceId\": \"45bf2891-dc8b-44a9-9c47-c44fa8250325\",\n      \"correlationId\": \"45bf2891-dc8b-44a9-9c47-c44fa8250325\"\n    },\n    \"payloadType\": \"com.mouss.events.AccountCreatedEvent\"\n  },\n  {\n    \"type\": \"AccountAggregate\",\n    \"aggregateIdentifier\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n    \"sequenceNumber\": 1,\n    \"timestamp\": \"2026-11-22T12:49:03.072Z\",\n    \"identifier\": \"267a512b-d854-40ee-985f-655dac22d9ee\",\n    \"payload\": {\n      \"accountId\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n      \"status\": \"ACTIVATED\"\n    },\n    \"metaData\": {\n      \"traceId\": \"45bf2891-dc8b-44a9-9c47-c44fa8250325\",\n      \"correlationId\": \"45bf2891-dc8b-44a9-9c47-c44fa8250325\"\n    },\n    \"payloadType\": \"com.mouss.events.AccountActivatedEvent\"\n  },\n  {\n    \"type\": \"AccountAggregate\",\n    \"aggregateIdentifier\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n    \"sequenceNumber\": 2,\n    \"timestamp\": \"2026-11-22T12:49:06.087Z\",\n    \"identifier\": \"4c6c1294-a9e6-48a2-b0e0-8afc06f61075\",\n    \"payload\": {\n      \"accountId\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n      \"amount\": 250,\n      \"currency\": \"MAD\"\n    },\n    \"metaData\": {\n      \"traceId\": \"aa99cb33-021c-4cfe-9846-e6cd048c0ac3\",\n      \"correlationId\": \"aa99cb33-021c-4cfe-9846-e6cd048c0ac3\"\n    },\n    \"payloadType\": \"com.mouss.events.AccountCreditedEvent\"\n  },\n  {\n    \"type\": \"AccountAggregate\",\n    \"aggregateIdentifier\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n    \"sequenceNumber\": 3,\n    \"timestamp\": \"2026-11-22T12:49:07.478Z\",\n    \"identifier\": \"5e0e4dad-6ae4-47c5-bbae-01875ab2102f\",\n    \"payload\": {\n      \"accountId\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n      \"amount\": 100,\n      \"currency\": \"MAD\"\n    },\n    \"metaData\": {\n      \"traceId\": \"9a23b152-cb67-4f8c-9f45-5d8d47468b61\",\n      \"correlationId\": \"9a23b152-cb67-4f8c-9f45-5d8d47468b61\"\n    },\n    \"payloadType\": \"com.mouss.events.AccountDebitedEvent\"\n  },\n  {\n    \"type\": \"AccountAggregate\",\n    \"aggregateIdentifier\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n    \"sequenceNumber\": 4,\n    \"timestamp\": \"2026-11-22T12:49:10.338Z\",\n    \"identifier\": \"9280a551-6ed8-4395-8441-ffe2cd251fa1\",\n    \"payload\": {\n      \"accountId\": \"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\n      \"status\": \"SUSPENDED\"\n    },\n    \"metaData\": {\n      \"traceId\": \"3c018e50-486d-4441-b35b-16be5ecadc38\",\n      \"correlationId\": \"3c018e50-486d-4441-b35b-16be5ecadc38\"\n    },\n    \"payloadType\": \"com.mouss.events.AccountStatusUpdatedEvent\"\n  }\n]"
+    },
+    {
+      "description": "Live account operation received over Server-Sent Events after a 50 MAD credit",
+      "method": "get",
+      "path": "/query/accounts/watch/{accountId}",
+      "status": "200",
+      "responseBody": "data:{\"id\":3,\"date\":\"2026-11-22T12:49:14.646Z\",\"amount\":50.0,\"type\":\"CREDIT\",\"currency\":\"MAD\",\"account\":{\"id\":\"fd2314b6-d3b4-454e-8b5e-c3f05998d55d\",\"balance\":1200.0,\"createdAt\":\"2026-11-22T12:49:03.067Z\",\"status\":\"ACTIVATED\",\"currency\":null}}\n\n"
+    }
+  ]
+}
